@@ -34,7 +34,20 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Compile translations
 RUN uv run pybabel compile -d src/locales -D messages
 
-# Reset the entrypoint, don't invoke `uv`
+# Run as an unprivileged user. Configuration and logs live in /app/data, which is MOUNTED at runtime:
+#   docker run -v /path/to/dir-with-config.yml:/app/data ...
+# No secret (Telegram token, qBittorrent password) is ever part of the image.
+RUN groupadd --gid 1000 bot && useradd --uid 1000 --gid 1000 --no-create-home --shell /usr/sbin/nologin bot \
+    && mkdir -p /app/data && chown bot:bot /app/data
+VOLUME ["/app/data"]
+USER bot
+
+LABEL org.opencontainers.image.title="qbittorrent-bot-rss" \
+      org.opencontainers.image.description="Telegram bot for qBittorrent with RSS management. Configuration is mounted at /app/data." \
+      org.opencontainers.image.source="https://github.com/DimaBroi/QBittorrentBot" \
+      org.opencontainers.image.licenses="GPL-3.0"
+
+# Reset the entrypoint and start python directly (no `uv run` at runtime)
 ENTRYPOINT []
 
-CMD ["uv", "run", "python", "-m", "src.main"]
+CMD ["python", "-m", "src.main"]

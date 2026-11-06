@@ -1,12 +1,38 @@
+# version control and editor/CI files
+.git
+.gitignore
+.github/
+.all-contributorsrc
+
+# python caches and local environments
 __pycache__
 *.pyc
 *.pyo
 *.pyd
 venv
+.venv
 .cache
+
+# docs, examples and tests are not needed at runtime
+docs/
+docker/
+tests/
+*.md
+!README.md
+
+# nothing private may ever be baked into the image: configuration is mounted at runtime (/app/data)
+data/
+config.yml
+config.yaml
+config.json
+config.toml
+*.env
+.env
+notify.json
+*.bak*
 *.log
-.git
 *.session
 *.session-journal
-docs/
-data/
+*.pem
+*.key
+id_*
