@@ -49,3 +49,37 @@ def parse_show_name(args: Optional[str]) -> Optional[str]:
     """'/addshow <name>' argument -> cleaned search term, or None when empty."""
     name = " ".join((args or "").split())
     return name or None
+
+
+# ---- removing a series -------------------------------------------------------------------------------------------
+MAX_SERIES = 20
+DELETE_MODES = {
+    "k": "Remove from Sonarr only. The episode files stay where they are.",
+    "f": "Remove from Sonarr and delete its episode files. The torrents keep seeding.",
+    "t": "Remove from Sonarr, delete its episode files and delete its torrents (frees the disk space).",
+}
+
+
+def series_label(series: dict) -> str:
+    title = (series.get("title") or "?").strip()
+    year = series.get("year")
+    return (f"{title} ({year})" if year else title)[:60]
+
+
+def filter_series(series: list, term: Optional[str] = None) -> list:
+    """Series whose title contains `term` (case-insensitive; all when empty), sorted by title, at most MAX_SERIES."""
+    term = (term or "").strip().lower()
+    found = [s for s in series or [] if term in (s.get("title") or "").lower()]
+    return sorted(found, key=lambda s: (s.get("sortTitle") or s.get("title") or "").lower())[:MAX_SERIES]
+
+
+def download_hashes(history: list) -> set:
+    """Lowercase torrent hashes that Sonarr grabbed for a series (from its history records)."""
+    return {(r.get("downloadId") or "").strip().lower() for r in history or []
+            if r.get("eventType") == "grabbed" and (r.get("downloadId") or "").strip()}
+
+
+def delete_confirmation(mode: str, name: str) -> str:
+    if mode not in DELETE_MODES:
+        raise ValueError(f"unknown mode {mode!r}")
+    return f"{name}\n\n{DELETE_MODES[mode]}\n\nThis cannot be undone. Continue?"
