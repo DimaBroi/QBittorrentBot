@@ -23,6 +23,8 @@ magnet:?xt=...
 magnet:?xt=...
 ```
 
+You don't need the menu buttons: paste a magnet link (or several, one per line) or drop a `.torrent` file straight into the chat and the bot asks which category it belongs to. The category decides the download folder (with qBittorrent's automatic torrent management), and "No category" keeps the default folder. The Add Magnet / Add Torrent buttons still work as before.
+
 The bot allows you to:
 
 * **List active torrents**
