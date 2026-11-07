@@ -39,6 +39,8 @@ sonarr:
 
 `/addshow Yaga` searches Sonarr and lists the matches (✓ marks shows it already has). After you pick one, choose **All episodes** (Sonarr searches for every released episode) or **New episodes only**. Without the `sonarr` section nothing changes.
 
+Administrators can also remove a show with the **🗑 Remove show** button or `/delshow [name]`. After picking the show, choose what happens: remove it from Sonarr only (files stay), also delete its episode files, or also delete its torrents to free the disk space. Every choice asks for confirmation first, and only torrents in the `sonarr` category that Sonarr itself grabbed for that show are ever deleted.
+
 The bot allows you to:
 
 * **List active torrents**

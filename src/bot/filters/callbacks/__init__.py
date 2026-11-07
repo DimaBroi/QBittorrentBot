@@ -6,4 +6,4 @@ from .pause_resume import PauseResumeMenu, Pause, PauseAll, Resume, ResumeAll   
 from .delete import DeleteAll, DeleteAllData, DeleteAllNoData, DeleteMenu, DeleteOne, DeleteOneData, DeleteOneNoData                    # noqa: F401
 from .settings import SettingsMenu, EditClientMenu, ReloadSettingsMenu, ToggleSpeedLimit, CheckConnection                               # noqa: F401
 from .rss import RssMenu, RssList, RssItem, RssToggle, RssDelete, RssAddFeed, RssWatch, RssWatchFeed, RssWatchCat                      # noqa: F401
-from .shows import AddShowMenu, ShowPick, ShowAdd                                                                                      # noqa: F401
+from .shows import AddShowMenu, ShowPick, ShowAdd, DelShowMenu, DelShowPick, DelShowMode, DelShowGo                                                                                      # noqa: F401

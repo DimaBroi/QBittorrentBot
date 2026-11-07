@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Optional
 
@@ -22,9 +23,10 @@ class SonarrClient:
         try:
             async with aiohttp.ClientSession(timeout=self._timeout, headers=self._headers) as session:
                 async with session.request(method, self._base + path, **kwargs) as response:
+                    text = await response.text()
                     if response.status >= 400:
-                        raise SonarrError(f"Sonarr answered {response.status}: {(await response.text())[:200]}")
-                    return await response.json()
+                        raise SonarrError(f"Sonarr answered {response.status}: {text[:200]}")
+                    return json.loads(text) if text.strip() else None   # DELETE answers with an empty body
         except aiohttp.ClientError as e:
             raise SonarrError(f"could not reach Sonarr ({type(e).__name__})") from e
 
@@ -43,3 +45,14 @@ class SonarrClient:
 
     async def add_series(self, payload: dict) -> dict:
         return await self._request("POST", "/series", json=payload)
+
+    async def series_list(self) -> list:
+        return await self._request("GET", "/series")
+
+    async def series_history(self, series_id: int) -> list:
+        """Everything Sonarr did for one series; 'grabbed' records carry the torrent hash as downloadId."""
+        return await self._request("GET", "/history/series", params={"seriesId": series_id})
+
+    async def delete_series(self, series_id: int, delete_files: bool) -> None:
+        await self._request("DELETE", f"/series/{series_id}",
+                            params={"deleteFiles": str(delete_files).lower(), "addImportListExclusion": "false"})

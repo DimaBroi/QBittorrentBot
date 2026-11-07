@@ -94,6 +94,7 @@ async def main(base_path: Path) -> None:
             BotCommand(command="start", description="Open the main menu"),
             BotCommand(command="stats", description="System stats"),
             BotCommand(command="addshow", description="Add a TV show to Sonarr: /addshow name"),
+            BotCommand(command="delshow", description="Remove a TV show from Sonarr: /delshow name"),
             BotCommand(command="rss", description="RSS menu: watch for a name, feeds, rules"),
             BotCommand(command="rss_list", description="Show RSS feeds and rules as text"),
             BotCommand(command="rss_help", description="RSS commands help"),
