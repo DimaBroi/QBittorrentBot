@@ -25,6 +25,20 @@ magnet:?xt=...
 
 You don't need the menu buttons: paste a magnet link (or several, one per line) or drop a `.torrent` file straight into the chat and the bot asks which category it belongs to. The category decides the download folder (with qBittorrent's automatic torrent management), and "No category" keeps the default folder. The Add Magnet / Add Torrent buttons still work as before.
 
+### Add TV shows to Sonarr (optional)
+
+If you run [Sonarr](https://sonarr.tv/), add this section to `config.yml` and the bot gets an **📺 Add show** button and the `/addshow <name>` command (managers and administrators):
+
+```yaml
+sonarr:
+  url: http://sonarr:8989          # reachable from the bot's container
+  api_key: <Sonarr API key>        # Sonarr -> Settings -> General
+  root_folder: /downloads/Shows    # path as Sonarr sees it (default)
+  quality_profile: HD-1080p        # profile name (default; the first profile is used if it does not exist)
+```
+
+`/addshow Yaga` searches Sonarr and lists the matches (✓ marks shows it already has). After you pick one, choose **All episodes** (Sonarr searches for every released episode) or **New episodes only**. Without the `sonarr` section nothing changes.
+
 The bot allows you to:
 
 * **List active torrents**
