@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 import json
 
 import yaml
@@ -10,6 +11,7 @@ from .client import Client
 from .user import User
 from .telegram import Telegram
 from .redis import Redis
+from .sonarr import Sonarr
 
 
 class Settings(BaseModel):
@@ -17,6 +19,7 @@ class Settings(BaseModel):
     telegram: Telegram
     users: list[User]
     redis: Redis
+    sonarr: Optional[Sonarr] = None
 
     def export_settings(self):
         settings_file_path = Path(__file__).parent.parent.parent / "data/config.yml"
