@@ -1,17 +1,23 @@
+import json
 import logging
 import tempfile
 
 from aiogram import F
 from aiogram import Bot
-from aiogram.types import Message
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from aiogram.dispatcher.router import Router
 from aiogram.utils.i18n import gettext as _
 
 from src.client_manager.client_repo import ClientRepo
 from src.settings import Settings
 from src.bot.filters import IsAuthorizedUser, IsCommand
+from src.bot.filters.callbacks import PendingAdd
 from src.redis_helper.wrapper import RedisWrapper
 
+from .add_utils import (
+    CANCEL, PENDING_TTL, category_choices, encode_pending, magnet_links, pending_key, pending_title,
+    safe_torrent_name,
+)
 from .common import send_menu
 
 
@@ -104,12 +110,43 @@ def get_router():
         await send_menu(bot, redis, settings, message.chat.id, message.message_id)
 
 
+    async def ask_category(message: Message, redis: RedisWrapper, settings: Settings, pending: dict) -> None:
+        """A magnet/.torrent arrived without the Add buttons: ask which category (= folder) it belongs to."""
+        repository_class = ClientRepo.get_client_manager(settings.client.type)
+        categories = await repository_class(settings).get_categories()
+
+        buttons = [InlineKeyboardButton(text=label, callback_data=PendingAdd(choice=choice).pack())
+                   for label, choice in category_choices(categories)]
+        rows = [buttons[i:i + 2] for i in range(0, len(buttons), 2)]
+        rows.append([InlineKeyboardButton(text=_("✖ Cancel"), callback_data=PendingAdd(choice=CANCEL).pack())])
+
+        sent = await message.reply(
+            _("📥 {title}\n\nWhich category is this? It decides the folder.").format(title=pending_title(pending)),
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=rows),
+            parse_mode=None,  # titles may contain markdown characters
+        )
+        await redis.set(pending_key(message.chat.id, sent.message_id), json.dumps(pending), ex=PENDING_TTL)
+
+    async def on_dropped_torrent(message: Message, redis: RedisWrapper, settings: Settings) -> None:
+        file_name = message.document.file_name or ""
+        if ".torrent" not in file_name:
+            await message.reply(_("This is not a torrent file! Retry"))
+            return
+        await ask_category(message, redis, settings, json.loads(
+            encode_pending("torrent", file_id=message.document.file_id, file_name=safe_torrent_name(file_name))))
+
+    async def on_dropped_magnet(message: Message, redis: RedisWrapper, settings: Settings, links: list) -> None:
+        await ask_category(message, redis, settings, json.loads(encode_pending("magnet", links=links)))
+
     @router.message(~F.from_user.is_bot, ~IsCommand(), IsAuthorizedUser())
     async def on_message(message: Message, redis: RedisWrapper, bot: Bot, settings: Settings) -> None:
         action = await redis.get(f"action:{message.from_user.id}") or ""
 
-        if message.document and not action: # insert torrent without using UI
-             await on_torrent(message, redis, bot, settings)
+        if message.document and not action:  # a .torrent dropped into the chat: ask for its category
+            await on_dropped_torrent(message, redis, settings)
+
+        elif not action and magnet_links(message.text):  # a magnet pasted into the chat: ask for its category
+            await on_dropped_magnet(message, redis, settings, magnet_links(message.text))
 
         elif "magnet" in action:
             await on_magnet(message, redis, bot, settings)

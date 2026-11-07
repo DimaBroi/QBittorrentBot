@@ -7,3 +7,8 @@ class AddMagnet(CallbackData, prefix="add_magnet"):
 
 class AddTorrent(CallbackData, prefix="add_torrent"):
     category: str | None
+
+
+class PendingAdd(CallbackData, prefix="padd"):
+    """Category chosen for a magnet/.torrent the user sent without using the Add buttons first."""
+    choice: str
